@@ -11,15 +11,22 @@ class BusinessRulesEngine:
     """Configurable rules engine for Priority and Escalation decisions."""
 
     INTENT_BASE_PRIORITY = {
+        "security_issue": "CRITICAL",
+        "duplicate_payment": "HIGH",
         "payment_issue": "HIGH",
-        "cancellation": "HIGH",
-        "refund": "HIGH",
-        "login_problem": "MEDIUM",
-        "technical_problem": "MEDIUM",
+        "complaint": "HIGH",
+        "refund": "MEDIUM",
+        "cancellation": "MEDIUM",
+        "damaged_product": "MEDIUM",
+        "defective_product": "MEDIUM",
+        "delayed_delivery": "MEDIUM",
         "account_issue": "MEDIUM",
-        "delivery_issue": "MEDIUM",
-        "order_problem": "MEDIUM",
+        "technical_support": "MEDIUM",
+        "login_issue": "LOW",
+        "order_status": "LOW",
+        "product_information": "LOW",
         "general_question": "LOW",
+        "unknown": "LOW",
     }
 
     PRIORITY_LEVELS = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
@@ -39,7 +46,7 @@ class BusinessRulesEngine:
         # Sentiment adjustment
         if sentiment in ["angry"]:
             current_index = min(len(self.PRIORITY_LEVELS) - 1, current_index + 2)
-        elif sentiment in ["frustrated", "negative"]:
+        elif sentiment in ["frustrated", "disappointed", "urgent"]:
             current_index = min(len(self.PRIORITY_LEVELS) - 1, current_index + 1)
 
         # Customer plan tier adjustment
@@ -58,26 +65,37 @@ class BusinessRulesEngine:
         confidence: float = 0.8,
     ) -> Tuple[bool, str]:
         """Determine if an issue requires human escalation and return the reason."""
-        # Rule 1: Angry customer with severe intent -> Escalate
+        # Rule 1: Security compromise -> Mandatory Immediate Escalation
+        if intent == "security_issue":
+            return True, "Security compromise alert requires immediate human agent intervention."
+
+        # Rule 2: Duplicate charge dispute or severe complaint -> Mandatory Escalation
+        if intent in ["duplicate_payment", "complaint"]:
+            return True, f"Billing dispute or formal complaint '{intent}' requires human agent verification."
+
+        if intent in ["refund", "payment_issue"] and priority in ["HIGH", "CRITICAL"] and sentiment in ["angry", "frustrated", "disappointed"]:
+            return True, f"High-risk payment issue '{intent}' with {sentiment} sentiment requires support verification."
+
+        # Rule 3: Angry customer -> Escalation
         if sentiment == "angry":
-            return True, "Customer is expressing severe anger/frustration."
+            return True, "Customer is expressing severe anger or frustration."
 
-        # Rule 2: Critical priority -> Escalate
+        # Rule 3b: Frustrated customer with high severity -> Escalation
+        if sentiment == "frustrated" and priority in ["HIGH", "CRITICAL"]:
+            return True, "Customer is frustrated with elevated priority — requires human intervention."
+
+        # Rule 4: Critical priority -> Escalation
         if priority == "CRITICAL":
-            return True, "Ticket identified as CRITICAL priority."
+            return True, "Ticket identified as CRITICAL priority level."
 
-        # Rule 3: High priority payment or cancellation issue -> Escalate
-        if intent in ["payment_issue", "cancellation"] and priority in ["HIGH", "CRITICAL"]:
-            return True, f"High-risk intent '{intent}' requires human agent verification."
+        # Rule 5: No knowledge retrieved for non-greeting queries -> Escalation
+        if not knowledge_retrieved and intent not in ["general_question", "login_issue", "order_status"]:
+            return True, "No matching knowledge base article found for technical/billing inquiry."
 
-        # Rule 4: No knowledge retrieved or low confidence -> Escalate
-        if not knowledge_retrieved:
-            return True, "Relevant information not found in Knowledge Base."
+        if confidence < 0.4:
+            return True, "AI confidence score is below threshold for automated resolution."
 
-        if confidence < 0.5:
-            return True, "Low AI confidence in resolving query automatically."
-
-        return False, "Query suitable for automated resolution."
+        return False, "Query suitable for automated AI resolution."
 
 
 business_rules = BusinessRulesEngine()

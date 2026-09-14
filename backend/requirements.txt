@@ -1,5 +1,5 @@
 # Web framework
-fastapi==0.115.12
+fastapi==0.115.9
 uvicorn[standard]==0.34.2
 python-dotenv==1.1.0
 python-multipart==0.0.20
@@ -12,7 +12,7 @@ alembic==1.15.2
 # AI / LLM
 langgraph==0.4.1
 langchain-openai==0.3.18
-langchain-core==0.3.55
+langchain-core==0.3.61
 langchain-community==0.3.24
 
 # Vector DB & Embeddings
@@ -25,4 +25,3 @@ httpx==0.28.1
 # Testing
 pytest==8.3.5
 pytest-asyncio==0.26.0
-httpx==0.28.1

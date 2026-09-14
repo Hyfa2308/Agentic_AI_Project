@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -43,6 +43,29 @@ export const updateTicket = async (ticketId, data) => {
 
 export const addTicketMessage = async (ticketId, message) => {
   const response = await api.post(`/tickets/${ticketId}/messages`, message);
+  return response.data;
+};
+
+// ── Customers ───────────────────────────────────────────────────────
+export const getCustomerHistory = async (customerId) => {
+  const response = await api.get(`/customers/${customerId}/history`);
+  return response.data;
+};
+
+// ── Conversations ───────────────────────────────────────────────────
+export const getConversation = async (conversationId) => {
+  const response = await api.get(`/conversations/${conversationId}`);
+  return response.data;
+};
+
+// ── Knowledge Base ──────────────────────────────────────────────────
+export const getKnowledgeBase = async () => {
+  const response = await api.get("/knowledge");
+  return response.data;
+};
+
+export const uploadKnowledgeDoc = async (docData) => {
+  const response = await api.post("/knowledge", docData);
   return response.data;
 };
 

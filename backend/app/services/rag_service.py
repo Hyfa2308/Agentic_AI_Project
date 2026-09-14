@@ -36,7 +36,8 @@ class RAGService:
                 metadata={"hnsw:space": "cosine"},
             )
             logger.info("ChromaDB initialized at %s with collection '%s'", self.persist_dir, self.collection_name)
-        except Exception as e:
+        except BaseException as e:
+            # Catch BaseException to handle pyo3 PanicException from Rust bindings (Python 3.14 compat)
             logger.warning("ChromaDB initialization warning: %s. RAG using local document search.", e)
 
     def query(self, query_text: str, top_k: int = 3) -> List[Dict[str, Any]]:

@@ -1,6 +1,6 @@
 """
 Response Agent module.
-Generates an accurate, grounded, empathetic response for auto-resolved tickets using retrieved knowledge.
+Generates an accurate, grounded, empathetic response using the LLM Service, multi-turn conversation history, and RAG knowledge.
 """
 
 import logging
@@ -14,40 +14,28 @@ logger = logging.getLogger("assistiq")
 def run_response_agent(state: AgentState) -> Dict[str, Any]:
     """Execute Response Agent node."""
     message = state.get("message", "")
-    intent = state.get("intent", "general_question")
-    sentiment = state.get("sentiment", "neutral")
+    conversation_history = state.get("conversation_history", [])
     knowledge = state.get("retrieved_knowledge", [])
+    customer_context = state.get("customer_context", {})
+    
+    agent_analysis = {
+        "intent": state.get("intent"),
+        "sentiment": state.get("sentiment"),
+        "priority": state.get("priority"),
+        "should_escalate": state.get("should_escalate", False),
+        "escalation_reason": state.get("escalation_reason"),
+        "ticket_id": state.get("ticket_id"),
+    }
 
     logger.info("Executing Response Agent for message: '%s'", message[:50])
 
-    # Format knowledge context
-    kb_context_text = "\n\n".join([f"[{k.get('source', 'KB')}]: {k.get('content', '')}" for k in knowledge])
-
-    if llm_service.is_available:
-        system_prompt = (
-            "You are an empathetic, professional AI Customer Support Agent for AssistIQ. "
-            "Use the provided Knowledge Base Context to answer the user's question accurately. "
-            "Do NOT invent company policies, price tags, or non-existent guarantees beyond the context. "
-            f"\n\n--- Knowledge Base Context ---\n{kb_context_text}"
-        )
-        prompt = f"Customer Query: \"{message}\"\nSentiment: {sentiment}\nIntent: {intent}"
-        ai_response = llm_service.generate_text(prompt, system_prompt)
-        return {"ai_response": ai_response}
-
-    # Grounded rule template fallback when LLM API key is not set
-    if knowledge:
-        top_k = knowledge[0]
-        content_preview = top_k.get("content", "").replace("#", "").strip()
-        ai_response = (
-            f"Thank you for contacting AssistIQ support! Based on our documentation:\n\n"
-            f"{content_preview}\n\n"
-            f"If you need any further details, please let us know!"
-        )
-    else:
-        ai_response = (
-            "Thank you for reaching out to AssistIQ Support. "
-            "We have received your query regarding your account and our team is ready to help you."
-        )
+    ai_response = llm_service.generate_chat_response(
+        customer_message=message,
+        conversation_history=conversation_history,
+        retrieved_knowledge=knowledge,
+        customer_context=customer_context,
+        agent_analysis=agent_analysis,
+    )
 
     logger.info("Response Agent generated response of length %d", len(ai_response))
     return {"ai_response": ai_response}

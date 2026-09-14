@@ -4,7 +4,7 @@ Coordinates Intent, Sentiment, Context, Knowledge (RAG), Priority, Decision, Res
 """
 
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 from langgraph.graph import StateGraph, END
 
 from app.agents.state import AgentState
@@ -21,7 +21,7 @@ logger = logging.getLogger("assistiq")
 
 
 def analyze_phase(state: AgentState) -> Dict[str, Any]:
-    """Runs parallel analysis: Intent, Sentiment, Context, Knowledge RAG, and Priority."""
+    """Runs analysis: Intent, Sentiment, Context, Knowledge RAG, and Priority."""
     logger.info("--- Orchestrator Phase 1: Context & Knowledge Retrieval ---")
     intent_res = run_intent_agent(state)
     sentiment_res = run_sentiment_agent(state)
@@ -77,12 +77,20 @@ builder.add_edge("escalation_agent", END)
 orchestrator_graph = builder.compile()
 
 
-def process_chat_message(message: str, customer_id: str = None, session_id: str = None) -> AgentState:
+def process_chat_message(
+    message: str,
+    customer_id: Optional[str] = None,
+    session_id: Optional[str] = None,
+    conversation_id: Optional[str] = None,
+    conversation_history: Optional[List[Dict[str, Any]]] = None,
+) -> AgentState:
     """Processes a customer chat message through the complete multi-agent LangGraph workflow."""
     initial_state: AgentState = {
         "message": message,
         "customer_id": customer_id,
-        "session_id": session_id,
+        "session_id": session_id or conversation_id,
+        "conversation_id": conversation_id or session_id,
+        "conversation_history": conversation_history or [],
         "customer_context": {},
         "retrieved_knowledge": [],
     }

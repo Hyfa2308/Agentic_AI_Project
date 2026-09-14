@@ -1,18 +1,12 @@
-# Official Refund & Return Policy
+# Official Refund Policy
 
-## 1. 30-Day Money-Back Guarantee
-We offer a full 30-day money-back guarantee for all physical goods and software subscriptions. If you are not satisfied with your purchase, you may request a refund within 30 days of the invoice date.
+## Eligibility Criteria
+Customers are eligible for a full refund under the following conditions:
+- Refund request is submitted within 14 calendar days of original purchase date.
+- Digital services or subscriptions have consumed less than 20% of monthly quota.
+- Damaged or defective physical items reported within 7 days of verified delivery.
 
-## 2. Refund Eligibility Criteria
-To be eligible for a refund:
-- Physical items must be undamaged and in their original packaging.
-- Digital products or subscription services must not exceed 50% usage or 30 calendar days.
-- Proof of purchase (order number or transaction ID) is required.
-
-## 3. Non-Refundable Items
-- Custom built products or personalized merchandise.
-- Gift cards and downloadable digital vouchers.
-- Express shipping fees once the package has dispatched.
-
-## 4. Refund Processing Time
-Once approved, refunds are processed back to the original payment method within 3 to 5 business days. Your financial institution may take an additional 2-3 days to post the credit to your statement.
+## Processing Timelines
+- Approved refunds are credited back to the original payment method (Credit Card, PayPal, Debit).
+- Processing duration is 3 to 5 business days for standard banking networks.
+- Duplicate charges are prioritized for immediate refund processing within 24 hours of support verification.

@@ -33,10 +33,10 @@ def test_priority_agent():
 
 def test_business_rules_escalation():
     should_esc, reason = business_rules.evaluate_escalation(
-        intent="payment_issue",
+        intent="duplicate_payment",
         sentiment="angry",
         priority="CRITICAL",
         knowledge_retrieved=True,
     )
     assert should_esc is True
-    assert "anger" in reason.lower() or "critical" in reason.lower()
+    assert "anger" in reason.lower() or "critical" in reason.lower() or "dispute" in reason.lower()

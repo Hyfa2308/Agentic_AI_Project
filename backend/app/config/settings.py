@@ -12,6 +12,9 @@ load_dotenv()
 class Settings:
     """Application settings from environment variables."""
 
+    # --- Mode ---
+    AI_MODE: str = os.getenv("AI_MODE", "mock").lower()
+
     # --- LLM ---
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
     LLM_MODEL: str = os.getenv("LLM_MODEL", "gpt-4o-mini")
@@ -19,7 +22,7 @@ class Settings:
     LLM_TEMPERATURE: float = float(os.getenv("LLM_TEMPERATURE", "0.3"))
     LLM_MAX_TOKENS: int = int(os.getenv("LLM_MAX_TOKENS", "1024"))
 
-    # --- PostgreSQL ---
+    # --- Database ---
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
         "postgresql://assistiq_user:assistiq_pass@localhost:5432/assistiq_db",
