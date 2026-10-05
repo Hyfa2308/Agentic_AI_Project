@@ -92,8 +92,8 @@ def ingest_knowledge():
             ids=ids,
         )
         logger.info("Ingestion completed successfully into ChromaDB at %s!", persist_dir)
-    except Exception as e:
-        logger.error("ChromaDB ingestion error: %s. Local markdown search fallback remains active.", e)
+    except BaseException as e:
+        logger.warning("ChromaDB ingestion warning: %s. Local markdown search fallback remains active.", e)
 
 
 if __name__ == "__main__":

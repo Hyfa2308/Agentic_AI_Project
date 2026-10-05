@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config.settings import settings
 from app.middleware.request_logging import RequestLoggingMiddleware
-from app.routes import health, chat, tickets, feedback, customers, conversations, knowledge
+from app.routes import health, chat, tickets, feedback, customers, conversations, knowledge, analytics
 from app.database.init_db import init_db
 
 # ── Logging ──────────────────────────────────────────────────────────
@@ -49,6 +49,7 @@ app.include_router(feedback.router)
 app.include_router(customers.router)
 app.include_router(conversations.router)
 app.include_router(knowledge.router)
+app.include_router(analytics.router, prefix="/api")
 
 
 @app.get("/")

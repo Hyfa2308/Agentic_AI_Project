@@ -31,5 +31,4 @@ class Ticket(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     customer = relationship("Customer", back_populates="tickets")
-    messages = relationship("Message", back_populates="ticket", cascade="all, delete-orphan")
     feedback = relationship("Feedback", back_populates="ticket", uselist=False, cascade="all, delete-orphan")

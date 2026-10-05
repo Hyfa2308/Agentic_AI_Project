@@ -1,258 +1,197 @@
 import { useState } from "react";
-import {
-  FaTicketAlt,
-  FaPaperPlane,
-  FaCheckCircle,
-  FaExclamationTriangle,
-  FaClock,
-} from "react-icons/fa";
-import { createTicket } from "../services/api";
-import "../styles/WebPortal.css";
+import { FiShield, FiSend, FiCheckCircle, FiSearch } from "react-icons/fi";
+import { createTicket, getTicket } from "../services/api";
 
-const CATEGORIES = [
-  { value: "account_issue", label: "Account" },
-  { value: "payment_issue", label: "Payment" },
-  { value: "order_problem", label: "Order" },
-  { value: "refund", label: "Refund" },
-  { value: "technical_problem", label: "Technical" },
-  { value: "cancellation", label: "Subscription" },
-  { value: "security_issue", label: "Security" },
-  { value: "general_question", label: "Other" },
-];
-
-function WebPortal() {
-  const [form, setForm] = useState({
-    customer_name: "",
-    customer_id: "",
-    email: "",
-    category: "payment_issue",
-    priority: "MEDIUM",
-    subject: "",
-    description: "",
+const WebPortal = () => {
+  const [activeTab, setActiveTab] = useState("submit"); // "submit" | "lookup"
+  const [formData, setFormData] = useState({
+    customer_name: "Jane Smith",
+    customer_id: "CUST-1002",
+    email: "jane.smith@example.com",
+    order_id: "ORD5921",
+    category: "billing",
+    subject: "Duplicate Payment Charge - Order #ORD5921",
+    description: "I was charged twice on my card for order ORD5921. Please refund the duplicate amount.",
   });
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState(null);
-  const [error, setError] = useState(null);
+  const [ticketResult, setTicketResult] = useState(null);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const [searchId, setSearchId] = useState("");
+  const [lookupResult, setLookupResult] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.customer_name.trim() || !form.subject.trim() || !form.description.trim()) {
-      setError("Please fill out all required fields.");
-      return;
-    }
-
     setSubmitting(true);
-    setError(null);
-    setResult(null);
-
     try {
-      const data = await createTicket(form);
-      setResult(data);
-      setForm({
-        customer_name: "",
-        customer_id: "",
-        email: "",
-        category: "payment_issue",
-        priority: "MEDIUM",
-        subject: "",
-        description: "",
+      const res = await createTicket({
+        customer_name: formData.customer_name,
+        customer_id: formData.customer_id,
+        subject: formData.subject,
+        description: formData.description + (formData.order_id ? ` (Order ID: ${formData.order_id})` : ""),
+        category: formData.category,
       });
-    } catch {
-      setError("Unable to submit support ticket. Please check your backend connection.");
+      setTicketResult(res);
+    } catch (e) {
+      console.error(e);
     } finally {
       setSubmitting(false);
     }
   };
 
+  const handleLookup = async (e) => {
+    e.preventDefault();
+    if (!searchId.trim()) return;
+    try {
+      const res = await getTicket(searchId.trim());
+      setLookupResult(res);
+    } catch (e) {
+      setLookupResult(null);
+    }
+  };
+
   return (
-    <div className="portal-page">
-      <div className="portal-container">
-        {/* Page Header */}
-        <div className="portal-header">
-          <div className="portal-icon-wrapper">
-            <FaTicketAlt />
-          </div>
-          <div>
-            <h1>AssistIQ Support Portal</h1>
-            <p>Submit a formal ticket to our intelligent AI support agent engine.</p>
-          </div>
+    <div className="portal-page-wrapper animate-fade-in">
+      <div className="portal-card-box">
+        <div className="portal-nav-tabs">
+          <button
+            className={`tab-btn ${activeTab === "submit" ? "active" : ""}`}
+            onClick={() => setActiveTab("submit")}
+          >
+            Submit Support Request
+          </button>
+          <button
+            className={`tab-btn ${activeTab === "lookup" ? "active" : ""}`}
+            onClick={() => setActiveTab("lookup")}
+          >
+            Track Existing Ticket
+          </button>
         </div>
 
-        {/* Success Modal Notification Banner */}
-        {result && (
-          <div className="success-banner-card">
-            <div className="banner-icon-success">
-              <FaCheckCircle />
-            </div>
-            <div className="banner-details">
-              <h3>✓ Ticket Created Successfully</h3>
-              <p>Your support request has been recorded and submitted to our AI pipeline.</p>
-              <div className="ticket-meta-grid">
-                <div className="meta-box">
-                  <span className="meta-label">Ticket ID:</span>
-                  <span className="meta-val ticket-code">{result.ticket_id}</span>
+        {activeTab === "submit" ? (
+          <div>
+            <h2 className="portal-heading">Submit a Support Request</h2>
+            <p className="portal-sub">Fill in the details below to dispatch your inquiry to support.</p>
+
+            {ticketResult ? (
+              <div className="ticket-success-card">
+                <FiCheckCircle className="check-icon" />
+                <h3>Ticket Created Successfully</h3>
+                <div className="ticket-code-big">{ticketResult.ticket_id}</div>
+
+                <div className="meta-grid">
+                  <div><span className="lbl">Status</span> <span className="badge badge-status-open">{ticketResult.status}</span></div>
+                  <div><span className="lbl">Priority</span> <span className="badge badge-priority-medium">{ticketResult.priority || "MEDIUM"}</span></div>
                 </div>
-                <div className="meta-box">
-                  <span className="meta-label">Status:</span>
-                  <span className="meta-val status-open">{result.status}</span>
-                </div>
-                <div className="meta-box">
-                  <span className="meta-label">Expected Response:</span>
-                  <span className="meta-val response-eta">
-                    <FaClock className="eta-icon" /> Within 24 hours
-                  </span>
-                </div>
+
+                <button onClick={() => setTicketResult(null)} className="btn-secondary-sm margin-top">
+                  Submit Another Request
+                </button>
               </div>
-            </div>
-            <button
-              className="btn-close-banner"
-              onClick={() => setResult(null)}
-              aria-label="Dismiss success message"
-            >
-              ×
-            </button>
-          </div>
-        )}
-
-        {/* Error Banner */}
-        {error && (
-          <div className="error-banner-card">
-            <FaExclamationTriangle className="error-icon" />
-            <span>{error}</span>
-            <button className="btn-close-banner" onClick={() => setError(null)}>
-              ×
-            </button>
-          </div>
-        )}
-
-        {/* Ticket Form */}
-        <form onSubmit={handleSubmit} className="portal-form">
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="customer_name">
-                Customer Name <span className="required-star">*</span>
-              </label>
-              <input
-                type="text"
-                id="customer_name"
-                name="customer_name"
-                value={form.customer_name}
-                onChange={handleChange}
-                placeholder="e.g., Sarah Connor"
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="customer_id">Customer ID (Optional)</label>
-              <input
-                type="text"
-                id="customer_id"
-                name="customer_id"
-                value={form.customer_id}
-                onChange={handleChange}
-                placeholder="e.g., CUST-1002"
-              />
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="email">Email Address (Optional)</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="sarah@example.com"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="category">Category</label>
-              <select
-                id="category"
-                name="category"
-                value={form.category}
-                onChange={handleChange}
-              >
-                {CATEGORIES.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="priority">Initial Priority</label>
-              <select
-                id="priority"
-                name="priority"
-                value={form.priority}
-                onChange={handleChange}
-              >
-                <option value="LOW">Low</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="HIGH">High</option>
-                <option value="CRITICAL">Critical</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="form-group full-width">
-            <label htmlFor="subject">
-              Subject <span className="required-star">*</span>
-            </label>
-            <input
-              type="text"
-              id="subject"
-              name="subject"
-              value={form.subject}
-              onChange={handleChange}
-              placeholder="Brief summary of your issue"
-              required
-            />
-          </div>
-
-          <div className="form-group full-width">
-            <label htmlFor="description">
-              Description <span className="required-star">*</span>
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              rows="5"
-              value={form.description}
-              onChange={handleChange}
-              placeholder="Describe your issue in detail. Our AI will analyze the problem, check sentiment urgency, and auto-route to the appropriate team..."
-              required
-            />
-          </div>
-
-          <button
-            className="btn-submit-ticket"
-            type="submit"
-            disabled={submitting}
-            id="create-ticket-button"
-          >
-            {submitting ? (
-              <span className="btn-loading">Creating Support Ticket...</span>
             ) : (
-              <>
-                <FaPaperPlane /> Create Support Ticket
-              </>
+              <form onSubmit={handleSubmit} className="portal-form">
+                <div className="form-row-2">
+                  <div className="form-group">
+                    <label>Your Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={formData.customer_name}
+                      onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Email Address</label>
+                    <input
+                      type="email"
+                      required
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row-2">
+                  <div className="form-group">
+                    <label>Order ID (Optional)</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. ORD5921"
+                      value={formData.order_id}
+                      onChange={(e) => setFormData({ ...formData, order_id: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Category</label>
+                    <select
+                      value={formData.category}
+                      onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    >
+                      <option value="billing">Billing & Payment</option>
+                      <option value="logistics">Shipping & Delivery</option>
+                      <option value="technical">Technical Support</option>
+                      <option value="returns">Refund & Returns</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Subject</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.subject}
+                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Detailed Description</label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  />
+                </div>
+
+                <button type="submit" disabled={submitting} className="btn-primary-md full-width">
+                  {submitting ? "Submitting..." : <><FiSend /> Submit Request</>}
+                </button>
+              </form>
             )}
-          </button>
-        </form>
+          </div>
+        ) : (
+          <div>
+            <h2 className="portal-heading">Track Existing Ticket</h2>
+            <p className="portal-sub">Enter your ticket code to view real-time status.</p>
+
+            <form onSubmit={handleLookup} className="search-bar-inline">
+              <input
+                type="text"
+                placeholder="Enter Ticket ID (e.g. TKT-1001)"
+                value={searchId}
+                onChange={(e) => setSearchId(e.target.value)}
+              />
+              <button type="submit" className="btn-primary-md">Lookup</button>
+            </form>
+
+            {lookupResult && (
+              <div className="lookup-card">
+                <h3>{lookupResult.subject}</h3>
+                <span className="code-text">{lookupResult.ticket_id}</span>
+                <div className="meta-grid">
+                  <div><span className="lbl">Customer</span> <span className="val">{lookupResult.customer_name}</span></div>
+                  <div><span className="lbl">Status</span> <span className="badge badge-status-open">{lookupResult.status}</span></div>
+                  <div><span className="lbl">Priority</span> <span className="badge badge-priority-medium">{lookupResult.priority || "MEDIUM"}</span></div>
+                </div>
+                <p className="desc-box">{lookupResult.description}</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
-}
+};
 
 export default WebPortal;

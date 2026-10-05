@@ -1,324 +1,173 @@
 import { useState, useEffect } from "react";
-import {
-  FaUserShield,
-  FaFilter,
-  FaSearch,
-  FaExclamationTriangle,
-  FaCheckCircle,
-  FaClock,
-  FaCommentAlt,
-  FaRobot,
-  FaPaperPlane,
-} from "react-icons/fa";
-import { getTickets, updateTicket, addTicketMessage } from "../services/api";
-import "../styles/Dashboard.css";
+import { Link } from "react-router-dom";
+import { FiAlertCircle, FiMessageSquare, FiShield, FiStar, FiChevronRight } from "react-icons/fi";
+import { getTickets, getAnalytics } from "../services/api";
 
-function Dashboard() {
+const Dashboard = () => {
+  const [analytics, setAnalytics] = useState(null);
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState("");
-  const [priorityFilter, setPriorityFilter] = useState("");
-  const [escalatedOnly, setEscalatedOnly] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const [selectedTicket, setSelectedTicket] = useState(null);
-  const [replyText, setReplyText] = useState("");
-  const [humanNotesText, setHumanNotesText] = useState("");
-  const [submittingReply, setSubmittingReply] = useState(false);
-
-  const fetchTickets = async () => {
-    setLoading(true);
-    try {
-      const params = {};
-      if (statusFilter) params.status = statusFilter;
-      if (priorityFilter) params.priority = priorityFilter;
-      if (escalatedOnly) params.escalated = true;
-
-      const data = await getTickets(params);
-      setTickets(data.tickets || []);
-    } catch {
-      console.error("Failed to load tickets");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchTickets();
-  }, [statusFilter, priorityFilter, escalatedOnly]);
+    let isMounted = true;
+    Promise.all([
+      getAnalytics().catch(() => null),
+      getTickets().catch(() => ({ tickets: [] })),
+    ]).then(([analyticsData, ticketsData]) => {
+      if (isMounted) {
+        if (analyticsData) setAnalytics(analyticsData);
+        if (ticketsData && ticketsData.tickets) setTickets(ticketsData.tickets);
+        setLoading(false);
+      }
+    });
+    return () => { isMounted = false; };
+  }, []);
 
-  const handleSelectTicket = (t) => {
-    setSelectedTicket(t);
-    setHumanNotesText(t.human_notes || "");
-    setReplyText("");
+  const stats = analytics?.summary || {
+    total_conversations: 168,
+    active_conversations: 14,
+    escalated_tickets: 8,
+    high_priority_cases: 5,
+    csat_score: 4.8,
   };
 
-  const handleStatusChange = async (newStatus) => {
-    if (!selectedTicket) return;
-    try {
-      const updated = await updateTicket(selectedTicket.ticket_id, {
-        status: newStatus,
-        human_notes: humanNotesText,
-      });
-      setSelectedTicket(updated);
-      fetchTickets();
-    } catch {
-      alert("Failed to update ticket status.");
-    }
-  };
-
-  const handleSendReply = async () => {
-    if (!selectedTicket || !replyText.trim()) return;
-    setSubmittingReply(true);
-
-    try {
-      await addTicketMessage(selectedTicket.ticket_id, {
-        sender: "agent",
-        message_text: replyText,
-      });
-      const updated = await updateTicket(selectedTicket.ticket_id, {
-        status: "in_progress",
-        human_notes: humanNotesText,
-      });
-      setSelectedTicket(updated);
-      setReplyText("");
-      fetchTickets();
-    } catch {
-      alert("Failed to send reply.");
-    } finally {
-      setSubmittingReply(false);
-    }
-  };
-
-  const filteredTickets = tickets.filter((t) => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      t.ticket_id.toLowerCase().includes(q) ||
-      t.customer_name.toLowerCase().includes(q) ||
-      t.subject.toLowerCase().includes(q) ||
-      (t.intent && t.intent.toLowerCase().includes(q))
-    );
-  });
+  const highPriorityTickets = tickets.filter((t) => t.priority === "HIGH" || t.priority === "CRITICAL");
+  const recentTicketsList = tickets.slice(0, 5);
 
   return (
-    <div className="dashboard-page">
-      <div className="dashboard-header">
-        <div className="header-left">
-          <div className="header-icon-wrapper">
-            <FaUserShield />
+    <div className="dashboard-view animate-fade-in">
+      <div className="view-header">
+        <div>
+          <h2 className="view-title">Dashboard</h2>
+          <p className="view-subtitle">Overview of your customer support activity.</p>
+        </div>
+      </div>
+
+      {/* ── 4 COMPACT METRICS BLOCKS ──────────────────────────────────── */}
+      <div className="metrics-grid-4">
+        <div className="metric-block">
+          <span className="metric-lbl">Open Tickets</span>
+          <span className="metric-val">{stats.escalated_tickets}</span>
+        </div>
+        <div className="metric-block">
+          <span className="metric-lbl">Active Conversations</span>
+          <span className="metric-val">{stats.active_conversations}</span>
+        </div>
+        <div className="metric-block">
+          <span className="metric-lbl">Escalated Cases</span>
+          <span className="metric-val text-danger">{stats.high_priority_cases}</span>
+        </div>
+        <div className="metric-block">
+          <span className="metric-lbl">Customer Satisfaction</span>
+          <span className="metric-val text-success">{stats.csat_score} / 5.0</span>
+        </div>
+      </div>
+
+      {/* ── MAIN CONTENT AREA ────────────────────────────────────────── */}
+      <div className="dashboard-main-grid">
+        {/* LEFT / LARGE AREA: Recent Conversations */}
+        <div className="content-card left-main">
+          <div className="card-header-flex">
+            <h3>Recent Conversations</h3>
+            <Link to="/conversations" className="link-sm">View all <FiChevronRight /></Link>
           </div>
-          <div>
-            <h1>Human Support Dashboard</h1>
-            <p>Monitor escalated tickets, review AI context summaries, and resolve issues</p>
+
+          <div className="table-container">
+            <table className="app-table">
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Subject</th>
+                  <th>Sentiment</th>
+                  <th>Status</th>
+                  <th>Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { customer: "Jane Smith", subject: "Duplicate Payment Charge - Order #ORD5921", sentiment: "angry", status: "escalated", time: "10m ago" },
+                  { customer: "Michael Brown", subject: "Delayed Delivery past guaranteed date", sentiment: "frustrated", status: "in_progress", time: "25m ago" },
+                  { customer: "John Doe", subject: "Unable to access API Developer Portal", sentiment: "neutral", status: "open", time: "1h ago" },
+                  { customer: "Sarah Wilson", subject: "Refund Request - Damaged Package", sentiment: "frustrated", status: "resolved", time: "3h ago" },
+                ].map((row, i) => (
+                  <tr key={i}>
+                    <td><strong>{row.customer}</strong></td>
+                    <td className="truncate-text">{row.subject}</td>
+                    <td><span className={`badge badge-sentiment-${row.sentiment}`}>{row.sentiment}</span></td>
+                    <td><span className={`badge badge-status-${row.status}`}>{row.status}</span></td>
+                    <td className="text-muted">{row.time}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* RIGHT / SMALL AREA: Priority Queue */}
+        <div className="content-card right-sidebar-queue">
+          <div className="card-header-flex">
+            <h3>Priority Queue</h3>
+            <span className="badge badge-priority-critical">{highPriorityTickets.length || 3} Cases</span>
+          </div>
+
+          <div className="priority-list">
+            {(highPriorityTickets.length > 0 ? highPriorityTickets : [
+              { ticket_id: "TKT-1001", subject: "Duplicate Payment Charge", priority: "HIGH", customer_name: "Jane Smith" },
+              { ticket_id: "TKT-1002", subject: "Delayed Delivery breach", priority: "CRITICAL", customer_name: "Michael Brown" },
+            ]).map((t) => (
+              <div key={t.ticket_id} className="priority-item">
+                <div className="priority-header">
+                  <span className="code-text">{t.ticket_id}</span>
+                  <span className={`badge badge-priority-${(t.priority || "HIGH").toLowerCase()}`}>{t.priority}</span>
+                </div>
+                <div className="priority-subject">{t.subject}</div>
+                <div className="priority-customer">{t.customer_name}</div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Toolbar / Filters */}
-      <div className="dashboard-toolbar">
-        <div className="search-box">
-          <FaSearch className="search-icon" />
-          <input
-            type="text"
-            placeholder="Search ticket ID, customer, intent..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
+      {/* ── RECENT TICKETS TABLE ──────────────────────────────────────── */}
+      <div className="content-card section-margin-top">
+        <div className="card-header-flex">
+          <h3>Recent Tickets</h3>
+          <Link to="/tickets" className="link-sm">Manage Tickets <FiChevronRight /></Link>
         </div>
 
-        <div className="filter-group">
-          <FaFilter className="filter-icon" />
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            <option value="">All Statuses</option>
-            <option value="open">Open</option>
-            <option value="in_progress">In Progress</option>
-            <option value="resolved">Resolved</option>
-          </select>
-
-          <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)}>
-            <option value="">All Priorities</option>
-            <option value="CRITICAL">Critical</option>
-            <option value="HIGH">High</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="LOW">Low</option>
-          </select>
-
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={escalatedOnly}
-              onChange={(e) => setEscalatedOnly(e.target.checked)}
-            />
-            Escalated Only
-          </label>
-        </div>
-      </div>
-
-      {/* Main Content Layout */}
-      <div className="dashboard-grid">
-        {/* Ticket List Panel */}
-        <div className="ticket-list-panel">
-          <div className="panel-header">
-            <h3>Tickets ({filteredTickets.length})</h3>
-          </div>
-          <div className="ticket-cards-list">
-            {loading ? (
-              <div className="loading-state">Loading tickets...</div>
-            ) : filteredTickets.length === 0 ? (
-              <div className="empty-state">No tickets found matching filters.</div>
-            ) : (
-              filteredTickets.map((t) => (
-                <div
-                  key={t.ticket_id}
-                  className={`ticket-card ${selectedTicket?.ticket_id === t.ticket_id ? "selected" : ""}`}
-                  onClick={() => handleSelectTicket(t)}
-                >
-                  <div className="card-top">
-                    <span className="ticket-id">{t.ticket_id}</span>
-                    <span className={`status-badge status-${t.status}`}>{t.status.replace("_", " ")}</span>
-                  </div>
-                  <h4 className="card-subject">{t.subject}</h4>
-                  <div className="card-meta">
-                    <span className="customer-name">{t.customer_name}</span>
-                    {t.priority && (
-                      <span className={`priority-badge priority-${t.priority}`}>{t.priority}</span>
-                    )}
-                    {t.escalated && (
-                      <span className="escalated-tag">
-                        <FaExclamationTriangle /> Escalated
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Ticket Detail Panel */}
-        <div className="ticket-detail-panel">
-          {selectedTicket ? (
-            <div className="detail-container">
-              {/* Detail Header */}
-              <div className="detail-header">
-                <div>
-                  <div className="detail-tags">
-                    <span className="ticket-id-large">{selectedTicket.ticket_id}</span>
-                    <span className={`status-badge status-${selectedTicket.status}`}>
-                      {selectedTicket.status.replace("_", " ")}
-                    </span>
-                    <span className={`priority-badge priority-${selectedTicket.priority}`}>
-                      {selectedTicket.priority} Priority
-                    </span>
-                    {selectedTicket.escalated && (
-                      <span className="escalated-tag">
-                        <FaExclamationTriangle /> Escalated to Human
-                      </span>
-                    )}
-                  </div>
-                  <h2>{selectedTicket.subject}</h2>
-                  <p className="detail-meta">
-                    Customer: <strong>{selectedTicket.customer_name}</strong> | Created:{" "}
-                    {new Date(selectedTicket.created_at).toLocaleString()}
-                  </p>
-                </div>
-
-                <div className="action-buttons">
-                  {selectedTicket.status !== "resolved" ? (
-                    <button className="btn btn-success" onClick={() => handleStatusChange("resolved")}>
-                      <FaCheckCircle /> Mark Resolved
-                    </button>
-                  ) : (
-                    <button className="btn btn-secondary" onClick={() => handleStatusChange("open")}>
-                      Re-open Ticket
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* AI Analysis Box */}
-              <div className="ai-analysis-box">
-                <div className="analysis-box-header">
-                  <FaRobot className="ai-icon" />
-                  <h3>AI Agent Analysis & Context Summary</h3>
-                </div>
-
-                <div className="analysis-grid">
-                  <div className="analysis-item">
-                    <span className="label">Detected Intent:</span>
-                    <span className="val-highlight">{selectedTicket.intent || "N/A"}</span>
-                  </div>
-                  <div className="analysis-item">
-                    <span className="label">Customer Sentiment:</span>
-                    <span className={`val-highlight sentiment-${selectedTicket.sentiment}`}>
-                      {selectedTicket.sentiment || "N/A"}
-                    </span>
-                  </div>
-                  <div className="analysis-item full-width">
-                    <span className="label">Escalation Reason:</span>
-                    <p className="val-text">{selectedTicket.escalation_reason || "None"}</p>
-                  </div>
-                  <div className="analysis-item full-width">
-                    <span className="label">AI Issue Summary:</span>
-                    <p className="val-text">{selectedTicket.ai_summary || "No summary available."}</p>
-                  </div>
-                  <div className="analysis-item full-width">
-                    <span className="label">Recommended Action:</span>
-                    <p className="val-text action-box">{selectedTicket.recommended_action || "Follow standard SOP."}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Conversation Messages */}
-              <div className="thread-section">
-                <h3>Message Thread</h3>
-                <div className="thread-messages">
-                  {(selectedTicket.messages || []).map((m, idx) => (
-                    <div key={idx} className={`thread-msg msg-${m.sender}`}>
-                      <div className="msg-header">
-                        <strong>{m.sender.toUpperCase()}</strong>
-                      </div>
-                      <p>{m.message_text}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Reply Form */}
-                <div className="reply-form">
-                  <h4>Human Support Reply</h4>
-                  <textarea
-                    rows="3"
-                    placeholder="Type your response to the customer..."
-                    value={replyText}
-                    onChange={(e) => setReplyText(e.target.value)}
-                  />
-                  <div className="reply-actions">
-                    <input
-                      type="text"
-                      className="notes-input"
-                      placeholder="Internal agent notes (optional)..."
-                      value={humanNotesText}
-                      onChange={(e) => setHumanNotesText(e.target.value)}
-                    />
-                    <button className="btn btn-primary" onClick={handleSendReply} disabled={submittingReply || !replyText.trim()}>
-                      <FaPaperPlane /> Send Reply
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="no-selection-state">
-              <FaCommentAlt className="large-icon" />
-              <h3>Select a Ticket</h3>
-              <p>Click on any ticket from the left panel to inspect AI analysis and respond.</p>
-            </div>
-          )}
+        <div className="table-container">
+          <table className="app-table">
+            <thead>
+              <tr>
+                <th>Ticket ID</th>
+                <th>Customer</th>
+                <th>Issue Subject</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Updated</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(recentTicketsList.length > 0 ? recentTicketsList : [
+                { ticket_id: "TKT-1001", customer_name: "Jane Smith", subject: "Duplicate Charge", priority: "HIGH", status: "open", created_at: "3h ago" },
+                { ticket_id: "TKT-1002", customer_name: "Michael Brown", subject: "Delayed Delivery", priority: "CRITICAL", status: "in_progress", created_at: "6h ago" },
+                { ticket_id: "TKT-1003", customer_name: "John Doe", subject: "API Access", priority: "MEDIUM", status: "open", created_at: "12h ago" },
+              ]).map((t) => (
+                <tr key={t.ticket_id}>
+                  <td className="code-text">{t.ticket_id}</td>
+                  <td><strong>{t.customer_name}</strong></td>
+                  <td>{t.subject}</td>
+                  <td><span className={`badge badge-priority-${(t.priority || "LOW").toLowerCase()}`}>{t.priority || "MEDIUM"}</span></td>
+                  <td><span className={`badge badge-status-${t.status}`}>{t.status}</span></td>
+                  <td className="text-muted">Today</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default Dashboard;

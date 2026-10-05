@@ -11,12 +11,17 @@ const api = axios.create({
 });
 
 // ── Chat ────────────────────────────────────────────────────────────
-export const sendChatMessage = async (message, customerId = null, sessionId = null) => {
-  const response = await api.post("/chat", {
-    message,
-    customer_id: customerId,
-    session_id: sessionId,
-  });
+export const sendChatMessage = async (message, customerId = null, conversationId = null) => {
+  const payload = { message };
+  if (customerId) payload.customer_id = customerId;
+  if (conversationId) payload.conversation_id = conversationId;
+
+  const response = await api.post("/chat", payload);
+  return response.data;
+};
+
+export const getConversationHistory = async (conversationId) => {
+  const response = await api.get(`/chat/history/${conversationId}`);
   return response.data;
 };
 
@@ -52,9 +57,25 @@ export const getCustomerHistory = async (customerId) => {
   return response.data;
 };
 
+export const getCustomers = async () => {
+  const response = await api.get("/customers");
+  return response.data;
+};
+
 // ── Conversations ───────────────────────────────────────────────────
 export const getConversation = async (conversationId) => {
   const response = await api.get(`/conversations/${conversationId}`);
+  return response.data;
+};
+
+export const getConversationsList = async () => {
+  const response = await api.get("/conversations");
+  return response.data;
+};
+
+// ── Analytics ───────────────────────────────────────────────────────
+export const getAnalytics = async () => {
+  const response = await api.get("/analytics");
   return response.data;
 };
 

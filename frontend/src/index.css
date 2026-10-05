@@ -1,111 +1,195 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  /* Restrained Professional Enterprise Palette */
+  --bg-body: #F8FAFC;
+  --bg-surface: #FFFFFF;
+  --bg-subtle: #F1F5F9;
+  --bg-hover: #F8FAFC;
+  --bg-input: #FFFFFF;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  --text-primary: #0F172A;
+  --text-secondary: #64748B;
+  --text-tertiary: #94A3B8;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  --border-color: #E2E8F0;
+  --border-subtle: #F1F5F9;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  /* Primary Brand */
+  --primary: #2563EB;
+  --primary-hover: #1D4ED8;
+  --primary-subtle: #EFF6FF;
+
+  /* Status Colors */
+  --status-open-bg: #EFF6FF;
+  --status-open-text: #1D4ED8;
+
+  --status-in_progress-bg: #F3E8FF;
+  --status-in_progress-text: #7E22CE;
+
+  --status-resolved-bg: #ECFDF5;
+  --status-resolved-text: #047857;
+
+  --status-escalated-bg: #FEF2F2;
+  --status-escalated-text: #B91C1C;
+
+  /* Priority Colors */
+  --priority-low-bg: #F0F9FF;
+  --priority-low-text: #0369A1;
+
+  --priority-medium-bg: #F3E8FF;
+  --priority-medium-text: #7E22CE;
+
+  --priority-high-bg: #FFFBEB;
+  --priority-high-text: #B45309;
+
+  --priority-critical-bg: #FEF2F2;
+  --priority-critical-text: #B91C1C;
+
+  /* Sentiment Colors */
+  --sentiment-happy-bg: #ECFDF5;
+  --sentiment-happy-text: #047857;
+
+  --sentiment-neutral-bg: #F1F5F9;
+  --sentiment-neutral-text: #475569;
+
+  --sentiment-frustrated-bg: #FFFBEB;
+  --sentiment-frustrated-text: #B45309;
+
+  --sentiment-angry-bg: #FEF2F2;
+  --sentiment-angry-text: #B91C1C;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+
+  /* Fonts */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 9999px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
-
-body {
+* {
+  box-sizing: border-box;
   margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
 }
 
-code,
-.counter {
-  font-family: var(--mono);
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: var(--radius-full);
+}
+
+/* Compact Badges */
+.badge {
   display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
 }
 
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+.badge-status-open { background: var(--status-open-bg); color: var(--status-open-text); }
+.badge-status-in_progress { background: var(--status-in_progress-bg); color: var(--status-in_progress-text); }
+.badge-status-resolved { background: var(--status-resolved-bg); color: var(--status-resolved-text); }
+.badge-status-escalated { background: var(--status-escalated-bg); color: var(--status-escalated-text); }
+
+.badge-priority-low { background: var(--priority-low-bg); color: var(--priority-low-text); }
+.badge-priority-medium { background: var(--priority-medium-bg); color: var(--priority-medium-text); }
+.badge-priority-high { background: var(--priority-high-bg); color: var(--priority-high-text); }
+.badge-priority-critical { background: var(--priority-critical-bg); color: var(--priority-critical-text); }
+
+.badge-sentiment-happy { background: var(--sentiment-happy-bg); color: var(--sentiment-happy-text); }
+.badge-sentiment-neutral { background: var(--sentiment-neutral-bg); color: var(--sentiment-neutral-text); }
+.badge-sentiment-frustrated { background: var(--sentiment-frustrated-bg); color: var(--sentiment-frustrated-text); }
+.badge-sentiment-angry { background: var(--sentiment-angry-bg); color: var(--sentiment-angry-text); }
+
+/* Tables */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+}
+
+.app-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.875rem;
+}
+
+.app-table th {
+  padding: 10px 14px;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.app-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+
+.app-table tr:last-child td {
+  border-bottom: none;
+}
+
+.app-table tr:hover {
+  background: var(--bg-hover);
+}
+
+.code-text {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
 }

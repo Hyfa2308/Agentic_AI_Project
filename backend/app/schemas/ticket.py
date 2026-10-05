@@ -56,7 +56,6 @@ class TicketResponse(BaseModel):
     human_notes: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    messages: List[MessageSchema] = []
 
     model_config = ConfigDict(from_attributes=True)
 

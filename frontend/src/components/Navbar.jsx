@@ -1,67 +1,77 @@
-import { useState } from "react";
-import { NavLink } from "react-router-dom";
-import { FaRobot, FaBars, FaTimes } from "react-icons/fa";
-import "../styles/Navbar.css";
+import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { FiCpu, FiMessageSquare, FiShield, FiBarChart2, FiInfo, FiZap, FiGrid } from "react-icons/fi";
+import { checkHealth } from "../services/api";
 
-function Navbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+const Navbar = () => {
+  const location = useLocation();
+  const [healthStatus, setHealthStatus] = useState("checking");
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen((prev) => !prev);
-  };
+  useEffect(() => {
+    let isMounted = true;
+    checkHealth()
+      .then((data) => {
+        if (isMounted) setHealthStatus(data.ai_mode === "real" ? "AI Real (LLM)" : "AI Active (Mock)");
+      })
+      .catch(() => {
+        if (isMounted) setHealthStatus("AI Online");
+      });
+    return () => { isMounted = false; };
+  }, []);
 
-  const closeMobileMenu = () => {
-    setMobileMenuOpen(false);
-  };
+  const navItems = [
+    { path: "/", label: "Home", icon: <FiCpu /> },
+    { path: "/chat", label: "Web Chat", icon: <FiMessageSquare /> },
+    { path: "/portal", label: "Support Portal", icon: <FiShield /> },
+    { path: "/dashboard", label: "Support Dashboard", icon: <FiBarChart2 /> },
+    { path: "/about", label: "Architecture & About", icon: <FiInfo /> },
+  ];
 
   return (
-    <nav className="navbar">
-      <div className="navbar-container">
-        <NavLink to="/" className="logo" onClick={closeMobileMenu}>
-          <div className="logo-icon-wrapper">
-            <FaRobot className="logo-icon" />
+    <nav className="navbar-container">
+      <div className="navbar-inner">
+        {/* Brand Logo */}
+        <Link to="/" className="navbar-brand">
+          <div className="brand-icon">
+            <FiZap />
           </div>
-          <div className="logo-text">
-            <h2>AssistIQ</h2>
-            <p>AI Support Platform</p>
+          <div className="brand-text">
+            <span className="brand-title">AssistIQ</span>
+            <span className="brand-subtitle">AI Sentiment & Escalation</span>
           </div>
-        </NavLink>
+        </Link>
 
-        <div className={`nav-links ${mobileMenuOpen ? "active" : ""}`}>
-          <NavLink to="/" end onClick={closeMobileMenu}>
-            Home
-          </NavLink>
-          <NavLink to="/chat" onClick={closeMobileMenu}>
-            Web Chat
-          </NavLink>
-          <NavLink to="/portal" onClick={closeMobileMenu}>
-            Support Portal
-          </NavLink>
-          <NavLink to="/about" onClick={closeMobileMenu}>
-            About
-          </NavLink>
-          <NavLink to="/dashboard" onClick={closeMobileMenu} className="nav-dashboard-link">
-            Agent Dashboard
-          </NavLink>
+        {/* Navigation Links */}
+        <div className="navbar-links">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`nav-link ${isActive ? "active" : ""}`}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                <span>{item.label}</span>
+                {isActive && <div className="active-indicator" />}
+              </Link>
+            );
+          })}
         </div>
 
-        <div className="navbar-right">
-          <div className="ai-status-indicator" title="AssistIQ Multi-Agent Engine Status">
-            <span className="status-pulse-dot" />
-            <span className="status-text">AI Online</span>
+        {/* Right Action & Status Pill */}
+        <div className="navbar-actions">
+          <div className="status-pill">
+            <span className="status-dot green" />
+            <span className="status-text">{healthStatus}</span>
           </div>
-
-          <button
-            className="hamburger-menu"
-            onClick={toggleMobileMenu}
-            aria-label="Toggle Navigation Menu"
-          >
-            {mobileMenuOpen ? <FaTimes /> : <FaBars />}
-          </button>
+          <Link to="/chat" className="btn-primary-sm">
+            <FiMessageSquare /> Launch Chat
+          </Link>
         </div>
       </div>
     </nav>
   );
-}
+};
 
 export default Navbar;

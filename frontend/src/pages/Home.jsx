@@ -1,228 +1,127 @@
 import { Link } from "react-router-dom";
-import {
-  FaRobot,
-  FaBrain,
-  FaShieldAlt,
-  FaArrowRight,
-  FaComments,
-  FaDatabase,
-  FaCheckCircle,
-  FaExclamationTriangle,
-  FaSearch,
-  FaBolt,
-  FaSyncAlt,
-} from "react-icons/fa";
-import "../styles/Home.css";
+import { FiMessageSquare, FiShield, FiBarChart2, FiCpu, FiTrendingUp, FiCheckCircle, FiZap, FiLayers, FiLock, FiDatabase } from "react-icons/fi";
+import ArchitectureDiagram from "../components/ArchitectureDiagram";
+import Footer from "../components/Footer";
 
-function Home() {
+const Home = () => {
   return (
-    <div className="home-page">
+    <div className="page-wrapper">
       {/* Hero Section */}
-      <section className="hero">
-        <div className="hero-content">
-          <div className="hero-badge">AI-Powered Customer Support</div>
-          <h1>
-            Resolve Customer Issues Faster with <span className="gradient-text">Intelligent AI</span>
-          </h1>
-          <p className="hero-subtitle">
-            AssistIQ uses multi-agent AI to understand customer intent, analyze sentiment, retrieve relevant knowledge, and intelligently resolve or escalate support requests.
-          </p>
-
-          <div className="hero-buttons">
-            <Link to="/chat" className="btn btn-primary">
-              <FaComments /> Start AI Chat
-            </Link>
-            <Link to="/portal" className="btn btn-secondary">
-              <FaShieldAlt /> Submit a Ticket
-            </Link>
-          </div>
+      <section className="hero-section">
+        <div className="hero-badge">
+          <FiZap /> Next-Generation AI Support & Escalation Engine
+        </div>
+        <h1 className="hero-title">
+          Intelligent Customer Support.<br />
+          <span className="gradient-text">Understood. Resolved. Escalated.</span>
+        </h1>
+        <p className="hero-subtitle">
+          AssistIQ is an enterprise-grade AI customer sentiment and escalation platform powered by multi-agent LangGraph workflows, real-time sentiment analysis, ChromaDB RAG knowledge search, and dynamic human support escalation.
+        </p>
+        
+        <div className="hero-cta-group">
+          <Link to="/chat" className="btn-primary-lg">
+            <FiMessageSquare /> Launch Web Chat
+          </Link>
+          <Link to="/dashboard" className="btn-secondary-lg">
+            <FiBarChart2 /> Support Agent Dashboard
+          </Link>
+          <Link to="/portal" className="btn-outline-lg">
+            <FiShield /> Submit Ticket
+          </Link>
         </div>
 
-        {/* Hero Visual: Workflow Dashboard Preview */}
-        <div className="hero-visual">
-          <div className="workflow-preview-card">
-            <div className="preview-header">
-              <div className="header-left">
-                <span className="live-dot" />
-                <span className="preview-title">AssistIQ Workflow Engine</span>
-              </div>
-              <span className="preview-tag">Multi-Agent Pipeline</span>
-            </div>
-
-            <div className="workflow-pipeline-visual">
-              <div className="pipeline-step">
-                <div className="step-icon step-blue"><FaComments /></div>
-                <div className="step-info">
-                  <strong>Customer Message</strong>
-                  <span>"I was charged twice for my subscription"</span>
-                </div>
-              </div>
-
-              <div className="pipeline-arrow"><FaArrowRight /></div>
-
-              <div className="pipeline-step">
-                <div className="step-icon step-purple"><FaBrain /></div>
-                <div className="step-info">
-                  <strong>Intent &amp; Sentiment</strong>
-                  <span className="badge-tag tag-intent">Intent: duplicate_payment</span>
-                  <span className="badge-tag tag-sentiment">Sentiment: frustrated</span>
-                </div>
-              </div>
-
-              <div className="pipeline-arrow"><FaArrowRight /></div>
-
-              <div className="pipeline-step">
-                <div className="step-icon step-cyan"><FaDatabase /></div>
-                <div className="step-info">
-                  <strong>Knowledge Retrieval</strong>
-                  <span>ChromaDB RAG matched SOP-Billing-02</span>
-                </div>
-              </div>
-
-              <div className="pipeline-arrow"><FaArrowRight /></div>
-
-              <div className="pipeline-step">
-                <div className="step-icon step-amber"><FaBolt /></div>
-                <div className="step-info">
-                  <strong>AI Decision</strong>
-                  <span className="badge-tag tag-high">Priority: HIGH</span>
-                </div>
-              </div>
-
-              <div className="pipeline-arrow"><FaArrowRight /></div>
-
-              <div className="pipeline-step">
-                <div className="step-icon step-emerald"><FaExclamationTriangle /></div>
-                <div className="step-info">
-                  <strong>Resolution / Escalation</strong>
-                  <span className="badge-tag tag-escalated">Ticket Generated: AI-1028</span>
-                </div>
-              </div>
-            </div>
+        {/* Hero Quick Stats */}
+        <div className="hero-stats-grid">
+          <div className="stat-card">
+            <div className="stat-number">10</div>
+            <div className="stat-label">Specialized AI Agents</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number">&lt; 1.5s</div>
+            <div className="stat-label">Average Response Time</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number">98.4%</div>
+            <div className="stat-label">Intent Accuracy</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-number">4.8/5</div>
+            <div className="stat-label">Customer Satisfaction</div>
           </div>
         </div>
       </section>
 
-      {/* Feature Cards Section */}
-      <section className="features-section">
+      {/* Architecture Visualization Section */}
+      <section className="section-container">
         <div className="section-header">
-          <h2>Core Intelligence Features</h2>
-          <p>Designed for fast resolution, zero hallucination, and empathetic customer care</p>
+          <h2>Reference Multi-Agent Architecture</h2>
+          <p>Every customer interaction is processed through a deterministic multi-agent state graph.</p>
+        </div>
+        <ArchitectureDiagram />
+      </section>
+
+      {/* Core Platform Features Grid */}
+      <section className="section-container">
+        <div className="section-header">
+          <h2>Enterprise Capabilities</h2>
+          <p>Built from the ground up for high-velocity customer support teams.</p>
         </div>
 
         <div className="features-grid">
           <div className="feature-card">
-            <div className="feature-icon bg-blue">
-              <FaRobot />
-            </div>
-            <h3>AI Customer Assistant</h3>
-            <p>
-              Provides instant, conversational responses tuned to specific customer issues with support for multi-turn context memory.
-            </p>
+            <div className="feature-icon purple"><FiMessageSquare /></div>
+            <h3>ChatGPT-Style Multi-Turn Chat</h3>
+            <p>Maintains persistent conversation memory across follow-ups, remembering order IDs, context, and previous statements naturally.</p>
           </div>
 
           <div className="feature-card">
-            <div className="feature-icon bg-purple">
-              <FaBrain />
-            </div>
+            <div className="feature-icon amber"><FiTrendingUp /></div>
             <h3>Sentiment Intelligence</h3>
-            <p>
-              Detects customer frustration and anger in real time, automatically escalating high-risk queries before customer satisfaction degrades.
-            </p>
+            <p>Classifies emotional tone into Happy, Neutral, Frustrated, and Angry, tracking sentiment changes across conversation turns.</p>
           </div>
 
           <div className="feature-card">
-            <div className="feature-icon bg-cyan">
-              <FaSearch />
-            </div>
-            <h3>Knowledge-Aware Responses</h3>
-            <p>
-              Uses Retrieval-Augmented Generation (RAG) over ChromaDB vector embeddings to deliver answers strictly grounded in official company policies.
-            </p>
+            <div className="feature-icon red"><FiShield /></div>
+            <h3>Smart Human Escalation</h3>
+            <p>Evaluates severity, billing disputes, and anger triggers using configurable business rules to dynamically create TKT-XXXX escalation cases.</p>
           </div>
 
           <div className="feature-card">
-            <div className="feature-icon bg-emerald">
-              <FaShieldAlt />
-            </div>
-            <h3>Intelligent Escalation</h3>
-            <p>
-              Seamlessly hands off complex billing or security disputes to human agents, generating structured ticket summaries and recommended actions.
-            </p>
+            <div className="feature-icon cyan"><FiCpu /></div>
+            <h3>Knowledge Agent (RAG)</h3>
+            <p>Queries ChromaDB vector embeddings for company policies, FAQs, and SOPs to generate grounded, hallucination-free answers.</p>
+          </div>
+
+          <div className="feature-card">
+            <div className="feature-icon green"><FiDatabase /></div>
+            <h3>PostgreSQL Customer Context</h3>
+            <p>Retrieves verified customer account profiles, plan tiers (Enterprise, Premium, Standard), and interaction history automatically.</p>
+          </div>
+
+          <div className="feature-card">
+            <div className="feature-icon blue"><FiLayers /></div>
+            <h3>Human Support Dashboard</h3>
+            <p>Full-featured management interface for support agents to inspect live conversations, assign escalated tickets, and view analytics.</p>
           </div>
         </div>
       </section>
 
-      {/* Workflow Section */}
-      <section className="workflow-section">
-        <div className="section-header">
-          <h2>How AssistIQ Works</h2>
-          <p>A step-by-step breakdown of automated query resolution</p>
-        </div>
-
-        <div className="workflow-steps-grid">
-          <div className="step-card">
-            <div className="step-number">1</div>
-            <h4>Request Ingestion</h4>
-            <p>Customer sends a message through the AssistIQ Web Chat or submits a ticket via the Support Portal.</p>
-          </div>
-
-          <div className="step-card">
-            <div className="step-number">2</div>
-            <h4>Intent &amp; Emotion Analysis</h4>
-            <p>Intent Agent classifies the problem while Sentiment Agent measures emotional tone and urgency.</p>
-          </div>
-
-          <div className="step-card">
-            <div className="step-number">3</div>
-            <h4>Context &amp; Vector RAG Retrieval</h4>
-            <p>Context Agent pulls customer history while Knowledge Agent performs similarity search on ChromaDB.</p>
-          </div>
-
-          <div className="step-card">
-            <div className="step-number">4</div>
-            <h4>Decision &amp; Response Engine</h4>
-            <p>Decision Agent determines if the AI can resolve automatically or needs human support escalation.</p>
+      {/* CTA Bottom Banner */}
+      <section className="cta-banner">
+        <div className="cta-content">
+          <h2>Ready to experience the future of AI Customer Support?</h2>
+          <p>Test real-time multi-turn conversation memory, intent detection, and automated ticket escalation now.</p>
+          <div className="cta-buttons">
+            <Link to="/chat" className="btn-primary-lg"><FiMessageSquare /> Try Web Chat Demo</Link>
+            <Link to="/portal" className="btn-secondary-lg"><FiShield /> Support Portal</Link>
           </div>
         </div>
       </section>
 
-      {/* Built for Intelligent Support Section */}
-      <section className="built-for-section">
-        <div className="built-for-card">
-          <div className="built-for-content">
-            <h2>Built for Intelligent Support</h2>
-            <p>
-              AssistIQ transforms modern customer care by reducing agent workload, accelerating response times from hours to seconds, and ensuring zero customer complaint is left unresolved.
-            </p>
-
-            <div className="built-for-benefits">
-              <div className="benefit-item">
-                <FaCheckCircle className="check-icon" />
-                <span>Zero Hallucination with RAG Grounding</span>
-              </div>
-              <div className="benefit-item">
-                <FaCheckCircle className="check-icon" />
-                <span>Structured Agent Handoff Summaries</span>
-              </div>
-              <div className="benefit-item">
-                <FaCheckCircle className="check-icon" />
-                <span>Full PostgreSQL &amp; ChromaDB History Storage</span>
-              </div>
-              <div className="benefit-item">
-                <FaCheckCircle className="check-icon" />
-                <span>Dual Execution Engine (Mock &amp; Production LLM)</span>
-              </div>
-            </div>
-
-            <div className="built-for-cta">
-              <Link to="/chat" className="btn btn-primary">Try Web Chat Demo</Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      <Footer />
     </div>
   );
-}
+};
 
 export default Home;

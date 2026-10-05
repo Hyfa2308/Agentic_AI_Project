@@ -19,16 +19,29 @@ from app.agents.escalation_agent import run_escalation_agent
 
 logger = logging.getLogger("assistiq")
 
+# Intents that don't need RAG knowledge retrieval
+SKIP_RAG_INTENTS = {"greeting"}
+
 
 def analyze_phase(state: AgentState) -> Dict[str, Any]:
-    """Runs analysis: Intent, Sentiment, Context, Knowledge RAG, and Priority."""
-    logger.info("--- Orchestrator Phase 1: Context & Knowledge Retrieval ---")
+    """Runs analysis: Intent, Sentiment, Context, and conditionally Knowledge RAG + Priority."""
+    logger.info("--- Orchestrator Phase 1: Intent & Sentiment Analysis ---")
     intent_res = run_intent_agent(state)
     sentiment_res = run_sentiment_agent(state)
     context_res = run_context_agent(state)
-    knowledge_res = run_knowledge_agent(state)
 
-    merged = {**intent_res, **sentiment_res, **context_res, **knowledge_res}
+    merged = {**intent_res, **sentiment_res, **context_res}
+
+    # Only run RAG for non-trivial intents
+    detected_intent = intent_res.get("intent", "general_question")
+    if detected_intent not in SKIP_RAG_INTENTS:
+        logger.info("--- Orchestrator Phase 1b: Knowledge RAG Retrieval ---")
+        knowledge_res = run_knowledge_agent(state)
+        merged.update(knowledge_res)
+    else:
+        logger.info("--- Orchestrator: Skipping RAG for intent '%s' ---", detected_intent)
+        merged["retrieved_knowledge"] = []
+
     temp_state = {**state, **merged}
 
     logger.info("--- Orchestrator Phase 2: Priority Evaluation ---")
@@ -83,6 +96,7 @@ def process_chat_message(
     session_id: Optional[str] = None,
     conversation_id: Optional[str] = None,
     conversation_history: Optional[List[Dict[str, Any]]] = None,
+    conversation_summary: Optional[str] = None,
 ) -> AgentState:
     """Processes a customer chat message through the complete multi-agent LangGraph workflow."""
     initial_state: AgentState = {
@@ -91,6 +105,7 @@ def process_chat_message(
         "session_id": session_id or conversation_id,
         "conversation_id": conversation_id or session_id,
         "conversation_history": conversation_history or [],
+        "conversation_summary": conversation_summary or "",
         "customer_context": {},
         "retrieved_knowledge": [],
     }

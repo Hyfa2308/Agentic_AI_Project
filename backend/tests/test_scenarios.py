@@ -21,7 +21,7 @@ def test_scenario_1_greeting():
     res = client.post("/api/chat", json={"message": "Hello"})
     assert res.status_code == 200
     data = res.json()
-    assert data["intent"] in ["general_question", "unknown"]
+    assert data["intent"] in ["greeting", "general_question", "unknown"]
     assert len(data["response"]) > 0
 
 

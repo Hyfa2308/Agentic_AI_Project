@@ -1,6 +1,7 @@
 """
 Response Agent module.
-Generates an accurate, grounded, empathetic response using the LLM Service, multi-turn conversation history, and RAG knowledge.
+Generates an accurate, grounded, empathetic response using the LLM Service,
+multi-turn conversation history, RAG knowledge, and full agent analysis context.
 """
 
 import logging
@@ -12,12 +13,13 @@ logger = logging.getLogger("assistiq")
 
 
 def run_response_agent(state: AgentState) -> Dict[str, Any]:
-    """Execute Response Agent node."""
+    """Execute Response Agent node with complete context."""
     message = state.get("message", "")
     conversation_history = state.get("conversation_history", [])
+    conversation_summary = state.get("conversation_summary", "")
     knowledge = state.get("retrieved_knowledge", [])
     customer_context = state.get("customer_context", {})
-    
+
     agent_analysis = {
         "intent": state.get("intent"),
         "sentiment": state.get("sentiment"),
@@ -35,6 +37,7 @@ def run_response_agent(state: AgentState) -> Dict[str, Any]:
         retrieved_knowledge=knowledge,
         customer_context=customer_context,
         agent_analysis=agent_analysis,
+        conversation_summary=conversation_summary,
     )
 
     logger.info("Response Agent generated response of length %d", len(ai_response))

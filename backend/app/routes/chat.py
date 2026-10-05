@@ -17,6 +17,9 @@ from app.agents.orchestrator import process_chat_message
 logger = logging.getLogger("assistiq")
 router = APIRouter(prefix="/api", tags=["Chat"])
 
+# Maximum number of recent messages to send to the LLM for context
+MAX_HISTORY_MESSAGES = 20
+
 
 class ChatRequest(BaseModel):
     message: str
@@ -75,27 +78,45 @@ async def chat(request: ChatRequest, db: Session = Depends(get_db)):
             db.add(conv)
             db.commit()
 
-        # 2. Fetch past conversation message history for this conversation_id
+        # 2. Fetch past conversation messages for this conversation_id (limited for performance)
         db_messages = (
             db.query(Message)
-            .filter(Message.ticket_id == conv_id)
+            .filter(Message.conversation_id == conv_id)
             .order_by(Message.created_at.asc())
             .all()
         )
 
-        conversation_history: List[Dict[str, Any]] = [
+        # Build conversation history with role labels the LLM understands
+        all_history: List[Dict[str, Any]] = [
             {
-                "role": "user" if m.sender == "customer" else "assistant",
+                "role": m.role or ("user" if m.sender == "customer" else "assistant"),
                 "content": m.message_text,
                 "timestamp": m.created_at.isoformat() if m.created_at else "",
             }
             for m in db_messages
         ]
 
-        # 3. Store incoming customer user message in DB
+        # Limit history to last MAX_HISTORY_MESSAGES for token efficiency
+        # but build a summary of earlier messages if conversation is long
+        conversation_summary = ""
+        if len(all_history) > MAX_HISTORY_MESSAGES:
+            earlier_messages = all_history[:-MAX_HISTORY_MESSAGES]
+            summary_parts = []
+            for msg in earlier_messages:
+                role_label = "Customer" if msg["role"] == "user" else "Assistant"
+                summary_parts.append(f"{role_label}: {msg['content'][:100]}")
+            conversation_summary = (
+                "Earlier conversation summary:\n" + "\n".join(summary_parts[-10:]) + "\n---\n"
+            )
+            conversation_history = all_history[-MAX_HISTORY_MESSAGES:]
+        else:
+            conversation_history = all_history
+
+        # 3. Store incoming customer message in DB
         user_msg = Message(
-            ticket_id=conv_id,
+            conversation_id=conv_id,
             sender="customer",
+            role="user",
             message_text=request.message,
         )
         db.add(user_msg)
@@ -108,14 +129,16 @@ async def chat(request: ChatRequest, db: Session = Depends(get_db)):
             session_id=conv_id,
             conversation_id=conv_id,
             conversation_history=conversation_history,
+            conversation_summary=conversation_summary,
         )
 
         response_text = final_state.get("ai_response") or "Thank you for your message."
 
         # 5. Store AI assistant response message in DB
         ai_msg = Message(
-            ticket_id=conv_id,
+            conversation_id=conv_id,
             sender="assistant",
+            role="assistant",
             message_text=response_text,
         )
         db.add(ai_msg)
@@ -152,7 +175,7 @@ def get_chat_history(conversation_id: str, db: Session = Depends(get_db)):
     """Retrieve conversation message history for a given conversation_id."""
     messages = (
         db.query(Message)
-        .filter(Message.ticket_id == conversation_id)
+        .filter(Message.conversation_id == conversation_id)
         .order_by(Message.created_at.asc())
         .all()
     )

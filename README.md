@@ -1,6 +1,6 @@
 # ASSISTIQ – AI-Powered Customer Sentiment & Escalation Platform
 
-**AssistIQ** is an enterprise-grade AI customer support platform that processes customer complaints, classifies intent and emotional sentiment, retrieves relevant customer context & knowledge base articles via Retrieval-Augmented Generation (RAG), evaluates ticket priority using a business rules engine, and automatically decides whether to resolve queries in real time or escalate them to human support agents with structured context summaries.
+**AssistIQ** is an enterprise-grade AI customer support platform that processes customer queries, classifies intent and emotional sentiment, retrieves relevant customer context & knowledge base articles via Retrieval-Augmented Generation (RAG), evaluates ticket priority using a business rules engine, and automatically decides whether to resolve queries in real time or escalate them to human support agents with structured context summaries.
 
 ---
 
@@ -8,10 +8,10 @@
 
 ```mermaid
 graph TD
-    Start([Customer Web Chat / Support Portal Input]) --> AnalyzePhase[Orchestrator Node]
+    Start([Customer Web Chat / Support Portal Input]) --> AnalyzePhase[LangGraph Orchestrator Node]
     
     subgraph Multi-Agent Processing Pipeline
-        AnalyzePhase --> IntentAgent[Intent Agent: Classification]
+        AnalyzePhase --> IntentAgent[Intent Agent: Semantic Classification]
         AnalyzePhase --> SentimentAgent[Sentiment Agent: Emotional Analysis]
         AnalyzePhase --> ContextAgent[Context Agent: PostgreSQL Customer History]
         AnalyzePhase --> KnowledgeAgent[Knowledge Agent: ChromaDB Vector RAG]
@@ -22,26 +22,31 @@ graph TD
         KnowledgeAgent --> PriorityAgent
         
         PriorityAgent --> DecisionNode[Decision Agent Node]
-    end
+      end
     
     DecisionNode -->|should_escalate == False| ResponseAgent[Response Agent: Grounded AI Response]
     DecisionNode -->|should_escalate == True| EscalationAgent[Escalation Agent: Generate Ticket & Context Summary]
     
-    ResponseAgent --> ChatOutput([Customer Output Response])
+    ResponseAgent --> CustomerResponse[Customer Response Agent: Formatted Output]
+    CustomerResponse --> ChatOutput([Customer Web Chat Output])
     EscalationAgent --> DashboardOutput([Persist PostgreSQL Ticket & Escalation Alert])
+    
+    ChatOutput --> FeedbackAgent[Feedback & Learning Agent]
+    FeedbackAgent --> DataStore[(PostgreSQL / ChromaDB)]
 ```
 
 ---
 
 ## 🚀 Key Features
 
-- **Multi-Agent LangGraph Workflow**: Modular 8-agent workflow pipeline (Intent, Sentiment, Context, Knowledge, Priority, Decision, Response, Escalation).
-- **Dual Execution Engine (`AI_MODE`)**: Supports `AI_MODE=mock` for deterministic test executions without API credits, and `AI_MODE=production` for OpenAI LLM orchestration.
-- **Sentiment & Emotion Intelligence**: Classifies emotional tone (`positive`, `neutral`, `negative`, `frustrated`, `angry`) with confidence scores to auto-prioritize urgent complaints.
-- **RAG Knowledge Base**: Uses ChromaDB vector search to retrieve grounded documentation from markdown knowledge bases (`account_recovery.md`, `payment_troubleshooting.md`, `refund_policy.md`, `order_tracking.md`, `subscription_cancellation.md`, `security_guidelines.md`, `general_support.md`).
-- **Smart Escalation & Business Rules**: Automatically elevates high-risk billing disputes, security alerts, and angry customer complaints to human agents.
-- **Human Support Dashboard**: Real-time agent interface to inspect AI context summaries, intent/sentiment metadata, recommended agent actions, and send direct replies.
-- **Support Portal & Web Chat**: Intercom/ChatGPT style Web Chat with left sidebar conversation history, suggested prompt chips, typing indicators, auto-scroll, retry handler, and in-page ticket creation alerts.
+- **Multi-Agent LangGraph Workflow**: Modular 10-agent workflow pipeline (Intent, Sentiment, Context, Knowledge, Priority, Decision, Response, Escalation, Customer Response, Feedback).
+- **ChatGPT-Style Multi-Turn Memory**: Maintains conversation memory across turns, understanding follow-up references (*"ORD12345"*, *"When will it arrive?"*, *"I already contacted support twice"*).
+- **Dual Execution Engine (`AI_MODE`)**: Supports `AI_MODE=mock` for deterministic testing without API credits, and `AI_MODE=real` for OpenAI LLM orchestration.
+- **Sentiment & Emotion Intelligence**: Classifies emotional tone (`Happy`, `Neutral`, `Frustrated`, `Angry`) with sentiment trajectory tracking to auto-prioritize urgent complaints.
+- **RAG Knowledge Base**: Uses ChromaDB vector search to retrieve grounded documentation from markdown knowledge bases (`account_recovery.md`, `payment_troubleshooting.md`, `refund_policy.md`, `order_tracking.md`, `subscription_cancellation.md`, `security_guidelines.md`, `escalation_sop.md`).
+- **Smart Escalation & Business Rules**: Automatically elevates high-risk billing disputes, security alerts, and angry customer complaints to human support agents.
+- **Support Agent & Admin Dashboard**: Full operations dashboard featuring live metrics, escalated ticket queue with filterable status/priority drawer, customer CRM profiles, sentiment analytics, intent analytics, and ChromaDB vector store manager.
+- **Support Portal & Web Chat**: Professional Web Chat interface with conversation history sidebar, suggested prompt chips, typing indicators, copy buttons, feedback ratings, and safe context metadata drawer.
 - **Database Architecture**: SQLAlchemy models for Customers, Tickets, Messages, Conversations, Intent/Sentiment Analysis, Escalations, Knowledge Documents, and Feedback.
 
 ---
@@ -54,51 +59,6 @@ graph TD
 - **Databases**: PostgreSQL (with automatic local SQLite fallback: `sqlite:///./assistiq.db`), ChromaDB Vector Store
 - **Embeddings**: Sentence Transformers / ChromaDB HNSW Cosine Vector Indexing
 - **Testing**: Pytest, FastAPI TestClient
-
----
-
-## 📁 Repository Structure
-
-```
-AssistIQ/
-├── backend/
-│   ├── app/
-│   │   ├── main.py                  # FastAPI entry point & router registration
-│   │   ├── config/settings.py       # Centralized settings & AI_MODE config
-│   │   ├── database/                # SQLAlchemy database connection & seed initializer
-│   │   │   ├── connection.py
-│   │   │   └── init_db.py
-│   │   ├── models/                  # Customer, Ticket, Message, Conversation, Analysis, Escalation, Knowledge, Feedback models
-│   │   ├── schemas/                 # Pydantic validation schemas
-│   │   ├── routes/                  # Health, Chat, Tickets, Customers, Conversations, Knowledge, Feedback routers
-│   │   ├── agents/                  # LangGraph agents & State definition
-│   │   │   ├── state.py
-│   │   │   ├── intent_agent.py
-│   │   │   ├── sentiment_agent.py
-│   │   │   ├── context_agent.py
-│   │   │   ├── knowledge_agent.py
-│   │   │   ├── priority_agent.py
-│   │   │   ├── decision_agent.py
-│   │   │   ├── response_agent.py
-│   │   │   ├── escalation_agent.py
-│   │   │   └── orchestrator.py      # LangGraph execution workflow builder
-│   │   ├── services/                # LLM service, RAG service, Business Rules engine
-│   │   └── middleware/              # Request logging middleware
-│   ├── knowledge_base/              # Markdown knowledge base docs (faqs/, sops/, policies/)
-│   ├── scripts/ingest_knowledge.py  # Knowledge ingestion script
-│   ├── tests/                       # Complete Pytest test suite
-│   ├── .env.example
-│   └── requirements.txt
-│
-└── frontend/
-    ├── src/
-    │   ├── pages/                   # Home, WebChat, WebPortal, About, Dashboard
-    │   ├── components/              # Navbar & layout widgets
-    │   ├── services/api.js          # Centralized Axios API client
-    │   └── styles/                  # Clean SaaS stylesheets
-    ├── index.html
-    └── package.json
-```
 
 ---
 
@@ -122,7 +82,6 @@ pip install -r requirements.txt
 
 # Configure environment variables
 cp .env.example .env
-# Set AI_MODE=mock for local dev or AI_MODE=production with OPENAI_API_KEY
 
 # Ingest knowledge documents into ChromaDB
 PYTHONPATH=. python3 scripts/ingest_knowledge.py
@@ -148,7 +107,7 @@ Frontend web application will be accessible at `http://localhost:5173`.
 
 ## 🧪 Running Automated Tests
 
-Run the backend test suite covering API routers, agent nodes, business rules engine, and verified customer scenarios:
+Run the backend test suite covering API routers, agent nodes, business rules engine, multi-turn memory, and verified customer scenarios:
 
 ```bash
 cd backend
@@ -164,37 +123,35 @@ PYTHONPATH=. venv/bin/pytest tests/ -v
 | `GET` | `/` | Service root and status |
 | `GET` | `/api/health` | API health check |
 | `POST` | `/api/chat` | Main AI chat endpoint (executes multi-agent graph) |
+| `GET` | `/api/chat/history/{conv_id}` | Retrieve chat session history |
 | `POST` | `/api/tickets` | Submit a ticket via Support Portal |
 | `GET` | `/api/tickets` | List support tickets (supports `status`, `priority`, `escalated` filters) |
 | `GET` | `/api/tickets/{ticket_id}` | Get ticket details & message thread |
 | `PATCH` | `/api/tickets/{ticket_id}` | Update ticket status, priority, or internal agent notes |
-| `POST` | `/api/tickets/{ticket_id}/messages` | Add agent/customer message reply |
+| `GET` | `/api/customers` | List all customer profiles |
 | `GET` | `/api/customers/{customer_id}/history` | Fetch customer history & tickets |
-| `GET` | `/api/conversations/{conversation_id}` | Retrieve conversation session history |
+| `GET` | `/api/conversations` | List conversation threads |
+| `GET` | `/api/analytics` | Aggregate platform metrics, sentiment, intent, & CSAT |
 | `GET` | `/api/knowledge` | List knowledge documents |
-| `POST` | `/api/knowledge` | Create knowledge document |
-| `POST` | `/api/knowledge/upload` | Upload markdown document file |
+| `POST` | `/api/knowledge` | Create/Upload knowledge document |
 | `POST` | `/api/feedback` | Submit customer rating feedback |
 
 ---
 
-## 🎯 Real Customer Complaint Scenarios Tested
+## 🎓 Internship & Viva Demonstration Outline
 
-1. **Duplicate Charge ("I was charged twice for the same order")**  
-   → Intent: `duplicate_payment`, Sentiment: `frustrated`, Priority: `HIGH`.  
-   → Decision: Escalate.  
-   → AI: *"I understand how concerning it is to see the same charge twice. I've escalated this to our billing support team so they can verify both transactions. Your ticket ID is AI-XXXX."*
-
-2. **Forgot Password ("I forgot my password")**  
-   → Intent: `password_reset`, Priority: `LOW`.  
-   → Decision: Auto-resolve.  
-   → AI: *"No problem! You can reset your password using the 'Forgot Password' link on our sign-in page..."*
-
-3. **Angry Customer ("This is ridiculous! I've been waiting three days for my refund!")**  
-   → Intent: `refund_request`, Sentiment: `angry`, Priority: `CRITICAL`.  
-   → Decision: Escalate.  
-   → AI: *"I understand your frustration, especially after waiting three days. I've escalated your issue to our support team..."*
-
-4. **Security Compromise ("Someone accessed my account without authorization!")**  
-   → Intent: `security_issue`, Priority: `CRITICAL`.  
-   → Decision: Immediate Mandatory Escalation.
+1. **Step 1: Open Web Chat (`http://localhost:5173/chat`)**
+   - Select Customer Profile (e.g. *Jane Smith - Enterprise Tier*).
+   - Type *"Hi, my order hasn't arrived."*
+   - Observe Intent: `delayed_delivery`, Sentiment: `neutral`.
+2. **Step 2: Multi-Turn Context Follow-Up**
+   - Type *"ORD5921"*.
+   - Type *"It was supposed to arrive yesterday."*
+   - Notice the AI understands *"it"* refers to order `ORD5921` from conversation context.
+3. **Step 3: Escalation Trigger**
+   - Type *"I'm extremely frustrated. I've contacted support three times!"*
+   - Sentiment changes to `angry` / `frustrated`, Priority elevates to `CRITICAL`.
+   - Ticket `TKT-XXXX` is created automatically.
+4. **Step 4: Support Agent Dashboard (`http://localhost:5173/dashboard`)**
+   - View ticket `TKT-XXXX` in Escalated Queue.
+   - Inspect customer profile, sentiment trajectory, and assign/resolve ticket.

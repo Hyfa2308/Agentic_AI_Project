@@ -14,6 +14,7 @@ class AgentState(TypedDict, total=False):
     customer_id: Optional[str]
     message: str
     conversation_history: List[Dict[str, Any]]
+    conversation_summary: str  # Summary of earlier messages for long conversations
 
     # AI Analysis Results
     intent: str
